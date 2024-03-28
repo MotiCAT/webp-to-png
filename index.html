@@ -197,6 +197,10 @@
                         deleteButton.addEventListener('click', function () {
                             downloadLinks.removeChild(linkContainer);
                             zip.remove(link.download);
+
+                            if (downloadLinks.children.length === 0) {
+                                downloadZip.style.display = 'none';
+                            }
                         });
 
                         zip.file(link.download, pngUrl.split('base64,')[1], { base64: true });
