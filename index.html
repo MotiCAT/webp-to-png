@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name=”viewport” content=”width=device-width,initial-scale=1.0″>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        #drop_zone {
+            border: 2px dashed #bbb;
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            border-radius: 5px;
+            padding: 25px;
+            text-align: center;
+            color: #bbb;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #008CBA;
+            color: white;
+            cursor: pointer;
+        }
+
+        a {
+            display: block;
+            margin-top: 20px;
+            padding: 10px;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            color: white;
+            text-decoration: none;
+            transition: background 0.5s;
+        }
+
+        a:hover {
+            background: linear-gradient(to right, #ff5e62, #ff9966);
+        }
+
+        a {
+            display: block;
+            margin-top: 20px;
+            padding: 10px;
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            color: white;
+            text-decoration: none;
+            transition: background 0.5s;
+        }
+
+        a:hover {
+            background: linear-gradient(to right, #ff5e62, #ff9966);
+        }
+
+        .downloadLink {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .deleteButton {
+            position: relative;
+            background: #f44336;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="drop_zone">Drop files here</div>
+    <button id="fileSelectButton">Select Files</button>
+    <input type="file" id="fileInput" accept=".webp" multiple style="display: none">
+    <div id="downloadLinks"></div>
+    <a id="downloadZip" style="display: none">Download All as ZIP</a>
+    <button id="deleteAllButton" style="display: none">Delete All</button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
+    <script>
+        var dropZone = document.getElementById('drop_zone');
+        var downloadLinks = document.getElementById('downloadLinks');
+        var downloadZip = document.getElementById('downloadZip');
+        var fileSelectButton = document.getElementById('fileSelectButton');
+        var fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('dragover', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        fileSelectButton.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function (e) {
+            var files = e.target.files;
+            downloadLinks.innerHTML = '';
+            var zip = new JSZip();
+            Array.from(files).forEach(function (file, i) {
+                if (file.type !== 'image/webp') {
+                    alert('Please upload a WebP file.');
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var image = new Image();
+                    image.onload = function () {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        var context = canvas.getContext('2d');
+                        context.drawImage(image, 0, 0, image.width, image.height);
+                        var pngUrl = canvas.toDataURL('image/png');
+                        var link = document.createElement('a');
+                        link.href = pngUrl;
+                        var originalName = file.name.split('.').slice(0, -1).join('.');
+                        link.download = originalName + '.png';
+                        link.textContent = 'Download ' + link.download;
+
+                        var linkContainer = document.createElement('div');
+                        linkContainer.className = 'downloadLink';
+                        downloadLinks.appendChild(linkContainer);
+
+                        linkContainer.appendChild(link);
+
+                        var deleteButton = document.createElement('button');
+                        deleteButton.textContent = '×';
+                        deleteButton.className = 'deleteButton';
+                        linkContainer.appendChild(deleteButton);
+
+                        deleteButton.addEventListener('click', function () {
+                            downloadLinks.removeChild(linkContainer);
+                            zip.remove(link.download);
+                        });
+
+                        zip.file(link.download, pngUrl.split('base64,')[1], { base64: true });
+                        if (i === files.length - 1) {
+                            zip.generateAsync({ type: 'blob' }).then(function (content) {
+                                downloadZip.href = URL.createObjectURL(content);
+                                downloadZip.style.display = 'block';
+                            });
+                        }
+                    };
+                    image.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            var files = e.dataTransfer.files;
+            downloadLinks.innerHTML = '';
+            var zip = new JSZip();
+            Array.from(files).forEach(function (file, i) {
+                if (file.type !== 'image/webp') {
+                    alert('Please upload a WebP file.');
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var image = new Image();
+                    image.onload = function () {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = image.width;
+                        canvas.height = image.height;
+                        var context = canvas.getContext('2d');
+                        context.drawImage(image, 0, 0, image.width, image.height);
+                        var pngUrl = canvas.toDataURL('image/png');
+                        var link = document.createElement('a');
+                        link.href = pngUrl;
+                        var originalName = file.name.split('.').slice(0, -1).join('.');
+                        link.download = originalName + '.png';
+                        link.textContent = 'Download ' + link.download;
+
+                        var linkContainer = document.createElement('div');
+                        linkContainer.className = 'downloadLink';
+                        downloadLinks.appendChild(linkContainer);
+
+                        linkContainer.appendChild(link);
+
+                        var deleteButton = document.createElement('button');
+                        deleteButton.textContent = '×';
+                        deleteButton.className = 'deleteButton';
+                        linkContainer.appendChild(deleteButton);
+
+                        deleteButton.addEventListener('click', function () {
+                            downloadLinks.removeChild(linkContainer);
+                            zip.remove(link.download);
+                        });
+
+                        zip.file(link.download, pngUrl.split('base64,')[1], { base64: true });
+                        if (i === files.length - 1) {
+                            zip.generateAsync({ type: 'blob' }).then(function (content) {
+                                downloadZip.href = URL.createObjectURL(content);
+                                downloadZip.style.display = 'block';
+                            });
+                        }
+                    };
+                    image.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+</body>
+
+</html>
